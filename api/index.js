@@ -7,7 +7,9 @@ const naver = require('./naver');
 const kcisa = require('./kcisa');
 
 app.use(cors({
-    origin: 'https://performance-swart.vercel.app'
+    origin: 'https://performance-swart.vercel.app',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],      
+    allowedHeaders: ['Content-Type', 'Authorization'],  
 }));
 
 app.use(bodyParser.urlencoded({ extended: false }));
