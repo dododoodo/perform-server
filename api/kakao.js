@@ -1,8 +1,11 @@
+require('dotenv').config(); // .env 로딩
+
 const express = require('express');
 const kakao = express.Router();
 const axios = require('axios');
 const { MongoClient } = require('mongodb');
 
+// MongoDB 설정
 const uri = "mongodb+srv://nsa10050:rlaehdus0823@gotoashow.9ufcsbx.mongodb.net/?retryWrites=true&w=majority&appName=gotoashow";
 const client = new MongoClient(uri);
 
@@ -15,12 +18,11 @@ async function dataCtrl() {
     console.log("MongoDB 연결 완료");
 }
 
-// 서버 시작 시 데이터베이스 연결
+initDB();
+
 async function initDB() {
     await dataCtrl();
 }
-
-initDB();
 
 kakao.get('/', async function (req, res) {
     const { code } = req.query;
@@ -30,21 +32,20 @@ kakao.get('/', async function (req, res) {
     }
 
     try {
+        const clientId = process.env.KAKAO_CLIENT_ID;
+        const redirectUri = process.env.CLIENT_REDIRECT_URI;
+
         let tokenResponse = await axios.post("https://kauth.kakao.com/oauth/token", null, {
             headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
             params: {
                 grant_type: "authorization_code",
-                client_id: "f26d70de4f91fb13430539fe82bcebfc",
-                redirect_uri: "http://localhost:3000/kakao/redirect",
+                client_id: clientId,
+                redirect_uri: redirectUri,
                 code
             }
-            
         });
 
-        if (!tokenResponse.data.access_token) {
-        }
-
-        let access_token = tokenResponse.data.access_token;
+        const access_token = tokenResponse.data.access_token;
 
         let userResponse = await axios.post("https://kapi.kakao.com/v2/user/me", null, {
             headers: {
@@ -71,9 +72,11 @@ kakao.get('/', async function (req, res) {
 
     } catch (error) {
         console.error("카카오 로그인 처리 중 오류 발생:", error.response?.data || error.message);
-        res.status(500).json({ error: '카카오 로그인 처리 중 오류 발생', details: error.response?.data || error.message });
+        res.status(500).json({
+            error: '카카오 로그인 처리 중 오류 발생',
+            details: error.response?.data || error.message
+        });
     }
-    
 });
 
 module.exports = kakao;
